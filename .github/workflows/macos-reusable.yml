@@ -50,16 +50,16 @@ jobs:
         uses: ./.github/actions/git-describe
         with:
           shell: ${{ inputs.shell }}
-      - name: Get SDK
-        if: ${{inputs.requires-sdk}}
-        uses: ./.github/actions/get-sdk
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ inputs.aws-region }}
-          shell: ${{ inputs.shell }}
-          os: ${{inputs.os}}
-          arch: ${{inputs.arch}}
+            #- name: Get SDK
+            #  if: ${{inputs.requires-sdk}}
+            #  uses: ./.github/actions/get-sdk
+            #  with:
+            #    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            #    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            #    aws-region: ${{ inputs.aws-region }}
+            #    shell: ${{ inputs.shell }}
+            #    os: ${{inputs.os}}
+            #    arch: ${{inputs.arch}}
       - name: Build
         uses: ./.github/actions/build
         with:
