@@ -42,7 +42,7 @@ runs:
           !cmbuild/lib/*.a
     - name: Create and upload SDK
       if: ${{ inputs.package-sdk }}
-      uses: ./.github/actions/create-sdk
+      uses: febiosoftware/febio-workflows/.github/actions/create-sdk@reusable-worfklow-macos
       with:
         shell: ${{ inputs.shell }}
         package-name: ${{ inputs.package-name }}
