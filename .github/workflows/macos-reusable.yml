@@ -87,9 +87,9 @@ jobs:
       - name: Repo Artifacts
         uses: ./.github/actions/repo-artifacts
         with:
-          ssh-user: ${{ secrets.ssh-user }}
-          ssh-key: ${{ secrets.ssh-key }}
-          ssh-host: ${{ secrets.ssh-host }}
+          ssh-user: ${{ secrets.SSH_USER }}
+          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-host: ${{ secrets.SSH_HOST }}
           shell: ${{ inputs.shell }}
           package-name: ${{ inputs.package-name }}
           os: ${{inputs.os}}
@@ -108,12 +108,12 @@ jobs:
       - name: Publish To S3
         uses: ./.github/actions/publish-to-s3
         with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           shell: ${{ inputs.shell }}
           package-name: ${{ inputs.package-name }}
           package-sdk: ${{ inputs.package-sdk }}
           os: ${{inputs.os}}
           arch: ${{inputs.arch}}
           git-tag: ${{ needs.build.outputs.git_describe }}
-          aws-access-key-id: ${{ secrets.aws-access-key-id }}
-          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
           aws-region: ${{ inputs.aws-region }}
