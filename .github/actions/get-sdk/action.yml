@@ -1,0 +1,41 @@
+name: 'Download SDK'
+description: 'Fetches SDK FROM AWS'
+inputs:
+  shell:
+    require: true
+    type: string
+  os:
+    required: true
+    type: string
+  arch:
+    required: true
+    type: string
+  aws-access-key-id:
+    required: true
+    type: string
+  aws-secret-access-key:
+    required: true
+    type: string
+  aws-region:
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    - name: Fetch latest febio-sdk
+      shell: ${{inputs.shell}}
+      run: |
+        ci/common/linux/get-febio-sdk.sh
+      env:
+        OS: ${{runner.os}}
+        FEBIO_SDK_BRANCH: ci/reusable-workflow-macos
+        PACKAGE_NAME: febio4
+        PACKAGE: febio4-sdk-v4.3-139-gd56c74e17.tar.gz
+        BUCKET: febio-packages
