@@ -38,7 +38,7 @@ runs:
   using: "composite"
   steps:
     - name: Get SDK
-      if: inputs.requires-sdk
+      if: ${{ inputs.requires-sdk == 'true' && inputs.package-sdk == 'false' }}
       uses: febiosoftware/febio-workflows/.github/actions/get-sdk@reusable-worfklow-macos
       with:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
@@ -60,7 +60,7 @@ runs:
           cmbuild/lib
           !cmbuild/lib/*.a
     - name: Create and upload SDK
-      if: inputs.package-sdk
+      if: ${{ inputs.package-sdk == 'true' && inputs.requires-sdk == 'false' }}
       uses: febiosoftware/febio-workflows/.github/actions/create-sdk@reusable-worfklow-macos
       with:
         shell: ${{ inputs.shell }}
