@@ -15,4 +15,4 @@ runs:
     - id: git-describe
       shell: ${{inputs.shell}}
       run: |
-        echo "git_describe=$(git describe --tags)" >> "$GITHUB_OUTPUT"
+        echo "git_describe=$(git describe || git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
