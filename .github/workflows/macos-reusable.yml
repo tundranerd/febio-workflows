@@ -65,7 +65,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
   tests:
-    if: ${{inputs.runTests}}
+    if: inputs.runTests
     name: Run test suite
     needs:
       - build
