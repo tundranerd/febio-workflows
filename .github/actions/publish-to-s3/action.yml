@@ -34,7 +34,7 @@ runs:
   using: "composite"
   steps:
     - name: Download SDK
-      if: ${{ inputs.package-sdk }}
+      if: ${{ inputs.package-sdk == 'true' }}
       uses: actions/download-artifact@v3
       with:
         name: ${{inputs.package-name}}-sdk-${{inputs.os}}-${{inputs.arch}}
