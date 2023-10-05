@@ -41,16 +41,16 @@ inputs:
 runs:
   using: "composite"
   steps:
-      - name: Get SDK
-        if: ${{inputs.requires-sdk}}
-        uses: febiosoftware/febio-workflows/.github/actions/get-sdk@reusable-worfklow-macos
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ inputs.aws-region }}
-          shell: ${{ inputs.shell }}
-          os: ${{inputs.os}}
-          arch: ${{inputs.arch}}
+    - name: Get SDK
+      if: ${{inputs.requires-sdk}}
+      uses: febiosoftware/febio-workflows/.github/actions/get-sdk@reusable-worfklow-macos
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+        shell: ${{ inputs.shell }}
+        os: ${{inputs.os}}
+        arch: ${{inputs.arch}}
     - name: Build
       shell: ${{inputs.shell}}
       run: |
