@@ -15,6 +15,9 @@ inputs:
     default: false
     required: false
     type: boolean
+  sdk-config:
+    required: false
+    type: string
   script:
     required: true
     type: string
@@ -38,7 +41,7 @@ runs:
   using: "composite"
   steps:
     - name: Get SDK
-      if: ${{ inputs.requires-sdk == 'true' && inputs.package-sdk == 'false' }}
+      if: ${{ inputs.requires-sdk == 'true' && inputs.sdk-config && inputs.package-sdk == 'false' }}
       uses: febiosoftware/febio-workflows/.github/actions/get-sdk@reusable-worfklow-macos
       with:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
@@ -47,6 +50,7 @@ runs:
         shell: ${{ inputs.shell }}
         os: ${{inputs.os}}
         arch: ${{inputs.arch}}
+        sdk-config: ${{inputs.sdk-config}}
     - name: Build
       shell: ${{inputs.shell}}
       run: |

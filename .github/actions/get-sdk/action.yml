@@ -19,10 +19,22 @@ inputs:
   aws-region:
     required: true
     type: string
+  sdk-config:
+    required: true
+    type: string
+
 
 runs:
   using: "composite"
   steps:
+    - name: Get Inputs
+      id: sdk-config
+      shell: ${{inputs.shell}}
+      run: |
+        echo "sdk_path=${{fromJson(inputs.sdk-config).sdk_path}}" >> $GITHUB_OUTPUT
+        echo "package_name=${{fromJson(inputs.sdk-config).package_name}}" >> $GITHUB_OUTPUT
+        echo "package=${{fromJson(inputs.sdk-config).package}}" >> $GITHUB_OUTPUT
+        echo "bucket=${{fromJson(inputs.sdk-config).bucket}}" >> $GITHUB_OUTPUT
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -34,8 +46,8 @@ runs:
       run: |
         ci/common/linux/get-febio-sdk.sh
       env:
-        OS: ${{runner.os}}
-        FEBIO_SDK_BRANCH: ci/reusable-workflow-macos
-        PACKAGE_NAME: febio4
-        PACKAGE: febio4-sdk-v4.3-139-gd56c74e17.tar.gz
-        BUCKET: febio-packages
+        OS: ${{inputs.os}}
+        FEBIO_SDK_BRANCH: ${{steps.sdk-config.outputs.sdk_path}}
+        PACKAGE_NAME: ${{steps.sdk-config.outputs.package_name}}
+        PACKAGE: ${{steps.sdk-config.outputs.package}}
+        BUCKET: ${{steps.sdk-config.outputs.bucket}}

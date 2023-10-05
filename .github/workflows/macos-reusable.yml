@@ -16,6 +16,9 @@ on:
         default: false
         required: false
         type: boolean
+      sdk-config:
+        required: false
+        type: string
       aws-region:
         default: us-east-1
         required: false
@@ -57,6 +60,7 @@ jobs:
           shell: ${{ inputs.shell }}
           package-name: ${{ inputs.package-name }}
           requires-sdk: ${{ inputs.requires-sdk }}
+          sdk-config: ${{ inputs.sdk-config }}
           package-sdk: ${{ inputs.package-sdk }}
           script: ci/${{inputs.os}}/build.sh
           os: ${{inputs.os}}
