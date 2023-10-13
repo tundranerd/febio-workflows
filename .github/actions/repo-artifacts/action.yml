@@ -43,7 +43,34 @@ runs:
       shell: ${{inputs.shell}}
       run: |
         ci/${{inputs.os}}/scp-to-repo.sh
+    - name: Get OS Argument
+      id: os-argument
+      shell: ${{inputs.shell}}
+      run: |
+        OS=${{inputs.os}}
+        case $OS in
+
+          macOS)
+            OS_ARG="-m"
+            ;;
+
+          Windows)
+            OS_ARG="-w"
+            ;;
+
+          Linux)
+            OS_ARG="-l"
+            ;;
+
+          *)
+            echo "unknown"; exit 1
+            ;;
+
+        esac
+        echo "os-arg=$OS_ARG" >> $GITHUB_OUTPUT
+
     - name: Make Dev Release
       shell: ${{inputs.shell}}
       run: |
-        ssh repo "python3 update2/FEBioStudio2Dev/makeDevRelease.py -l"
+        OS_ARG=${{steps.os-argument.outputs.os-arg}}
+        ssh repo "python3 update2/FEBioStudio2Dev/makeDevRelease.py $OS_ARG"
