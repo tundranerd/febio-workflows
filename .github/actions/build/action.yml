@@ -67,7 +67,7 @@ runs:
       if: ${{ inputs.package-sdk == 'true' && inputs.requires-sdk == 'false' }}
       uses: febiosoftware/febio-workflows/.github/actions/create-sdk@reusable-worfklow-macos
       with:
-        shell: ${{ inputs.shell }}
+        shell: bash
         package-name: ${{ inputs.package-name }}
         script: ci/${{inputs.os}}/create-sdk.sh
         os: ${{inputs.os}}

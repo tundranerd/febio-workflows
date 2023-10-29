@@ -10,7 +10,10 @@ inputs:
   arch:
     required: true
     type: string
-
+  script:
+    required: true
+    type: string
+    default: ci/${{inputs.os}}/test.sh
 runs:
   using: "composite"
   steps:
@@ -23,7 +26,7 @@ runs:
     - name: Run test suite
       shell: bash
       run: |
-        ci/${{inputs.os}}/test.sh
+        ${{ inputs.script }}
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
