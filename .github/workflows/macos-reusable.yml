@@ -1,0 +1,132 @@
+on:
+  workflow_call:
+    inputs:
+      shell:
+        required: false
+        default: bash
+        type: string
+      package-name:
+        required: true
+        type: string
+      package-sdk:
+        default: false
+        required: false
+        type: boolean
+      requires-sdk:
+        default: false
+        required: false
+        type: boolean
+      sdk-config:
+        required: false
+        type: string
+      aws-region:
+        default: us-east-1
+        required: false
+        type: string
+      os:
+        default: macOS
+        required: false
+        type: string
+      arch:
+        default: X64
+        required: false
+        type: string
+      runTests:
+        description: "Run tests?"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    name: Clone and build
+    runs-on: self-hosted
+    outputs:
+      git_describe: ${{ steps.git-describe.outputs.git_describe }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+      - id: git-describe
+        name: Git Describe
+        uses: febiosoftware/febio-workflows/.github/actions/git-describe@reusable-worfklow-macos
+        with:
+          shell: ${{ inputs.shell }}
+      - name: Build
+        uses: febiosoftware/febio-workflows/.github/actions/build@reusable-worfklow-macos
+        with:
+          shell: ${{ inputs.shell }}
+          package-name: ${{ inputs.package-name }}
+          requires-sdk: ${{ inputs.requires-sdk }}
+          sdk-config: ${{ inputs.sdk-config }}
+          package-sdk: ${{ inputs.package-sdk }}
+          script: ci/${{inputs.os}}/build.sh
+          os: ${{inputs.os}}
+          arch: ${{inputs.arch}}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws-region }}
+  tests:
+    if: inputs.runTests
+    name: Run test suite
+    needs:
+      - build
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+      - name: Tests
+        uses: febiosoftware/febio-workflows/.github/actions/run-tests@reusable-worfklow-macos
+        with:
+          shell: ${{ inputs.shell }}
+          package-name: ${{ inputs.package-name }}
+          os: ${{inputs.os}}
+          arch: ${{inputs.arch}}
+  repo-artifacts:
+    name: Upload artifacts to repo
+    needs:
+      - build # required to get output from the start-runner job
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+      - name: Repo Artifacts
+        uses: febiosoftware/febio-workflows/.github/actions/repo-artifacts@reusable-worfklow-macos
+        with:
+          ssh-user: ${{ secrets.SSH_USER }}
+          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-host: ${{ secrets.SSH_HOST }}
+          shell: ${{ inputs.shell }}
+          package-name: ${{ inputs.package-name }}
+          os: ${{inputs.os}}
+          arch: ${{inputs.arch}}
+  publish-to-s3:
+    name: Publish to S3
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+      - name: Publish To S3
+        uses: febiosoftware/febio-workflows/.github/actions/publish-to-s3@reusable-worfklow-macos
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          shell: ${{ inputs.shell }}
+          package-name: ${{ inputs.package-name }}
+          package-sdk: ${{ inputs.package-sdk }}
+          os: ${{inputs.os}}
+          arch: ${{inputs.arch}}
+          git-tag: ${{ needs.build.outputs.git_describe }}
+          aws-region: ${{ inputs.aws-region }}

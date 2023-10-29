@@ -1,0 +1,53 @@
+name: 'Download SDK'
+description: 'Fetches SDK FROM AWS'
+inputs:
+  shell:
+    require: true
+    type: string
+  os:
+    required: true
+    type: string
+  arch:
+    required: true
+    type: string
+  aws-access-key-id:
+    required: true
+    type: string
+  aws-secret-access-key:
+    required: true
+    type: string
+  aws-region:
+    required: true
+    type: string
+  sdk-config:
+    required: true
+    type: string
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get Inputs
+      id: sdk-config
+      shell: ${{inputs.shell}}
+      run: |
+        echo "sdk_path=${{fromJson(inputs.sdk-config).sdk_path}}" >> $GITHUB_OUTPUT
+        echo "package_name=${{fromJson(inputs.sdk-config).package_name}}" >> $GITHUB_OUTPUT
+        echo "package=${{fromJson(inputs.sdk-config).package}}" >> $GITHUB_OUTPUT
+        echo "bucket=${{fromJson(inputs.sdk-config).bucket}}" >> $GITHUB_OUTPUT
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+    - name: Fetch latest febio-sdk
+      shell: ${{inputs.shell}}
+      run: |
+        ci/common/linux/get-febio-sdk.sh
+      env:
+        OS: ${{inputs.os}}
+        FEBIO_SDK_BRANCH: ${{steps.sdk-config.outputs.sdk_path}}
+        PACKAGE_NAME: ${{steps.sdk-config.outputs.package_name}}
+        PACKAGE: ${{steps.sdk-config.outputs.package}}
+        BUCKET: ${{steps.sdk-config.outputs.bucket}}

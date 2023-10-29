@@ -1,0 +1,74 @@
+name: 'Build'
+description: 'Builds project and uploads artifacts'
+inputs:
+  shell:
+    require: true
+    type: string
+  package-name:
+    required: true
+    type: string
+  package-sdk:
+    default: false
+    required: false
+    type: boolean
+  requires-sdk:
+    default: false
+    required: false
+    type: boolean
+  sdk-config:
+    required: false
+    type: string
+  script:
+    required: true
+    type: string
+  os:
+    required: true
+    type: string
+  arch:
+    required: true
+    type: string
+  aws-access-key-id:
+    required: true
+    type: string
+  aws-secret-access-key:
+    required: true
+    type: string
+  aws-region:
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get SDK
+      if: ${{ inputs.requires-sdk == 'true' && inputs.sdk-config && inputs.package-sdk == 'false' }}
+      uses: febiosoftware/febio-workflows/.github/actions/get-sdk@reusable-worfklow-macos
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+        shell: ${{ inputs.shell }}
+        os: ${{inputs.os}}
+        arch: ${{inputs.arch}}
+        sdk-config: ${{inputs.sdk-config}}
+    - name: Build
+      shell: ${{inputs.shell}}
+      run: |
+        ${{ inputs.script }}
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.package-name }}-${{inputs.os}}-${{inputs.arch}}
+        path: |
+          cmbuild/bin
+          cmbuild/lib
+          !cmbuild/lib/*.a
+    - name: Create and upload SDK
+      if: ${{ inputs.package-sdk == 'true' && inputs.requires-sdk == 'false' }}
+      uses: febiosoftware/febio-workflows/.github/actions/create-sdk@reusable-worfklow-macos
+      with:
+        shell: ${{ inputs.shell }}
+        package-name: ${{ inputs.package-name }}
+        script: ci/${{inputs.os}}/create-sdk.sh
+        os: ${{inputs.os}}
+        arch: ${{inputs.arch}}
