@@ -13,7 +13,6 @@ inputs:
   script:
     required: true
     type: string
-    default: ci/${{inputs.os}}/test.sh
 runs:
   using: "composite"
   steps:
