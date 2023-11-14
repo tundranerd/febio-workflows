@@ -60,6 +60,7 @@ runs:
       with:
         name: ${{ inputs.package-name }}-${{inputs.os}}-${{inputs.arch}}
         path: |
+          cmbuild/Release
           cmbuild/bin
           cmbuild/lib
           !cmbuild/lib/*.a
