@@ -51,11 +51,11 @@ jobs:
           submodules: 'true'
       - id: git-describe
         name: Git Describe
-        uses: febiosoftware/febio-workflows/.github/actions/git-describe@reusable-worfklow-macos
+        uses: febiosoftware/febio-workflows/.github/actions/git-describe@develop
         with:
           shell: ${{ inputs.shell }}
       - name: Build
-        uses: febiosoftware/febio-workflows/.github/actions/build@reusable-worfklow-macos
+        uses: febiosoftware/febio-workflows/.github/actions/build@develop
         with:
           shell: ${{ inputs.shell }}
           package-name: ${{ inputs.package-name }}
@@ -80,7 +80,7 @@ jobs:
         with:
           submodules: 'true'
       - name: Tests
-        uses: febiosoftware/febio-workflows/.github/actions/run-tests@reusable-worfklow-macos
+        uses: febiosoftware/febio-workflows/.github/actions/run-tests@develop
         with:
           shell: ${{ inputs.shell }}
           package-name: ${{ inputs.package-name }}
@@ -98,7 +98,7 @@ jobs:
         with:
           submodules: 'true'
       - name: Repo Artifacts
-        uses: febiosoftware/febio-workflows/.github/actions/repo-artifacts@reusable-worfklow-macos
+        uses: febiosoftware/febio-workflows/.github/actions/repo-artifacts@develop
         with:
           ssh-user: ${{ secrets.SSH_USER }}
           ssh-key: ${{ secrets.SSH_KEY }}
@@ -119,7 +119,7 @@ jobs:
         with:
           submodules: 'true'
       - name: Publish To S3
-        uses: febiosoftware/febio-workflows/.github/actions/publish-to-s3@reusable-worfklow-macos
+        uses: febiosoftware/febio-workflows/.github/actions/publish-to-s3@develop
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
