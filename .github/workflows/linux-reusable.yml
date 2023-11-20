@@ -142,6 +142,7 @@ jobs:
       - name: Tests
         uses: febiosoftware/febio-workflows/.github/actions/run-tests@develop
         with:
+          script: ci/${{inputs.os}}/test.sh
           shell: ${{ inputs.shell }}
           package-name: ${{ inputs.package-name }}
           os: ${{inputs.os}}
