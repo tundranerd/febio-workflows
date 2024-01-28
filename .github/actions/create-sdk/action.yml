@@ -2,7 +2,8 @@ name: 'SDK'
 description: 'Creates SDK and Uploads artifacts'
 inputs:
   shell:
-    require: true
+    required: false
+    default: bash
     type: string
   package-name:
     default: febio
@@ -26,7 +27,7 @@ runs:
       env:
         TARGET_DIR: ${{ inputs.package-name }}-sdk
       run: |
-        ${{ inputs.script }}
+        ci/${{inputs.os}}/create-sdk.sh
     - name: Upload SDK
       uses: actions/upload-artifact@v3
       with:

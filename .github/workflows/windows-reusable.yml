@@ -116,7 +116,7 @@ jobs:
       - name: Build
         uses: febiosoftware/febio-workflows/.github/actions/build@develop
         with:
-          shell: ${{ inputs.shell }}
+          shell: cmd
           package-name: ${{ inputs.package-name }}
           requires-sdk: ${{ inputs.requires-sdk }}
           sdk-config: ${{ inputs.sdk-config }}
@@ -143,7 +143,7 @@ jobs:
         uses: febiosoftware/febio-workflows/.github/actions/run-tests@develop
         with:
           script: ci/${{inputs.os}}/test.bat
-          shell: ${{ inputs.shell }}
+          shell: cmd
           package-name: ${{ inputs.package-name }}
           os: ${{inputs.os}}
           arch: ${{inputs.arch}}

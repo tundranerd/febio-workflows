@@ -47,7 +47,6 @@ runs:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
         aws-region: ${{ inputs.aws-region }}
-        shell: ${{ inputs.shell }}
         os: ${{inputs.os}}
         arch: ${{inputs.arch}}
         sdk-config: ${{inputs.sdk-config}}
@@ -68,8 +67,6 @@ runs:
       if: ${{ inputs.package-sdk == 'true' && inputs.requires-sdk == 'false' }}
       uses: febiosoftware/febio-workflows/.github/actions/create-sdk@develop
       with:
-        shell: ${{ inputs.shell }}
         package-name: ${{ inputs.package-name }}
-        script: ci/${{inputs.os}}/create-sdk.sh
         os: ${{inputs.os}}
         arch: ${{inputs.arch}}

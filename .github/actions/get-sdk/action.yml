@@ -2,7 +2,8 @@ name: 'Download SDK'
 description: 'Fetches SDK FROM AWS'
 inputs:
   shell:
-    require: true
+    required: false
+    default: bash
     type: string
   os:
     required: true
