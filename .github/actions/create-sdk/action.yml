@@ -29,7 +29,7 @@ runs:
       run: |
         ci/${{inputs.os}}/create-sdk.sh
     - name: Upload SDK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.package-name }}-sdk-${{inputs.os}}-${{inputs.arch}}
         path: |
