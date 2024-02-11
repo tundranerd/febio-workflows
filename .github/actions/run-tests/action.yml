@@ -21,7 +21,6 @@ runs:
   using: "composite"
   steps:
     - uses: actions/download-artifact@v4
-      shell: ${{inputs.shell}}
       with:
         name: ${{inputs.package-name}}-${{inputs.os}}-${{inputs.arch}}
         path: |
