@@ -7,6 +7,9 @@ inputs:
   fbsVer:
     required: true
     type: string
+  fbsRepo:
+    required: true
+    type: string
   shell:
     require: true
     type: string
@@ -37,6 +40,7 @@ runs:
       env:
         FEBIO_VER: ${{inputs.febioVer}}
         FBS_VER: ${{inputs.fbsVer}}
+        FBSRepo: ${{inputs.fbsRepo}}
     - name: Build
       shell: ${{inputs.shell}}
       run: |
