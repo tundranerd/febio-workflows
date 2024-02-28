@@ -149,29 +149,29 @@ jobs:
   #         package-name: ${{ inputs.package-name }}
   #         os: ${{inputs.os}}
   #         arch: ${{inputs.arch}}
-  # stop-runner:
-  #   name: Stop self-hosted EC2 runner
-  #   needs:
-  #     - start-runner # required to get output from the start-runner job
-  #     - tests # required to wait when the main job is done
-  #   runs-on: ubuntu-latest
-  #   if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
-  #   steps:
-  #     - name: Configure AWS credentials
-  #       uses: aws-actions/configure-aws-credentials@v4
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: ${{ inputs.aws-region }}
-  #     - name: Stop EC2 runner
-  #       uses: tundranerd/ec2-multiple-github-runners@multi-os-multi-runner
-  #       with:
-  #         mode: stop
-  #         os: ${{ inputs.os }}
-  #         wait-for-deregistry-timeout: 5
-  #         github-token: ${{ secrets.GH_TOKEN}}
-  #         label: ${{ needs.start-runner.outputs.label }}
-  #         ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
+  stop-runner:
+    name: Stop self-hosted EC2 runner
+    needs:
+      - start-runner # required to get output from the start-runner job
+      - release # required to wait when the main job is done
+    runs-on: ubuntu-latest
+    if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws-region }}
+      - name: Stop EC2 runner
+        uses: tundranerd/ec2-multiple-github-runners@multi-os-multi-runner
+        with:
+          mode: stop
+          os: ${{ inputs.os }}
+          wait-for-deregistry-timeout: 5
+          github-token: ${{ secrets.GH_TOKEN}}
+          label: ${{ needs.start-runner.outputs.label }}
+          ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
   # repo-artifacts:
   #   name: Upload artifacts to repo
   #   needs:
