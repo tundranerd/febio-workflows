@@ -7,9 +7,6 @@ inputs:
   fbsVer:
     required: true
     type: string
-  fbsRepo:
-    required: true
-    type: string
   shell:
     require: true
     type: string
@@ -22,7 +19,10 @@ inputs:
   ib_license_contents:
     required: true
     type: string
-  installerName:
+  releaseDir:
+    required: true
+    type: string
+  installerSuffix:
     required: true
     type: string
 
@@ -53,14 +53,12 @@ runs:
       with:
         name: ${{ inputs.package-name }}-${{inputs.os}}-${{inputs.arch}}
         path: |
-          cmbuild/Release
-          cmbuild/bin
-          cmbuild/lib
-          !cmbuild/lib/*.a
+          ${{inputs.releaseDir}}/bin
+          ${{inputs.releaseDir}}/febioLib
     - name: Upload Installer
       uses: actions/upload-artifact@v4
       with:
         name: FEBioStudio_${{inputs.fbsVer}}_FEBio_${{inputs.febioVer}}_${{inputs.os}}}
         path: |
-          ${{inputs.installerName}}
+          ${{inputs.releaseDir}}/installer.${{inputs.installerSuffix}}
     

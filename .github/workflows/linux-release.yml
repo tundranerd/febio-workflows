@@ -128,7 +128,8 @@ jobs:
           os: ${{inputs.os}}
           ib_license_file: /home/ubuntu/license.xml
           ib_license_contents: ${{ secrets.INSTALL_BUILDER_LICENSE }}
-          installerName: /home/ubuntu/installer.run
+          releaseDir: /home/ubuntu/release
+          installerSuffix: run
   # tests:
   #   if: inputs.runTests
   #   name: Run test suite
