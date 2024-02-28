@@ -92,7 +92,9 @@ jobs:
     needs:
       - build # required to get output from the start-runner job
     runs-on: ubuntu-latest
-    if: ${{ success() }}
+    if: >
+      success() &&
+      ! github.event.pull_request.head.repo.fork
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -113,7 +115,9 @@ jobs:
     needs:
       - build
     runs-on: ubuntu-latest
-    if: ${{ success() }}
+    if: >
+      success() &&
+      ! github.event.pull_request.head.repo.fork
     steps:
       - name: Checkout
         uses: actions/checkout@v4
