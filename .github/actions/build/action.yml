@@ -42,7 +42,7 @@ runs:
   steps:
     - name: Get SDK
       if: ${{ inputs.requires-sdk == 'true' && inputs.sdk-config && inputs.package-sdk == 'false' }}
-      uses: tundranerd/febio-workflows/.github/actions/get-sdk@develop
+      uses: febiosoftware/febio-workflows/.github/actions/get-sdk@develop
       with:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
@@ -65,7 +65,7 @@ runs:
           !cmbuild/lib/*.a
     - name: Create and upload SDK
       if: ${{ inputs.package-sdk == 'true' && inputs.requires-sdk == 'false' }}
-      uses: tundranerd/febio-workflows/.github/actions/create-sdk@develop
+      uses: febiosoftware/febio-workflows/.github/actions/create-sdk@develop
       with:
         package-name: ${{ inputs.package-name }}
         os: ${{inputs.os}}
