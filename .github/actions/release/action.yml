@@ -1,0 +1,56 @@
+name: 'Release'
+description: 'Runs release script and uploads artifacts'
+inputs:
+  febioVer:
+    required: true
+    type: string
+  fbsVer:
+    required: true
+    type: string
+  shell:
+    require: true
+    type: string
+  os:
+    required: true
+    type: string
+  installerName:
+    required: true
+    type: string
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Write License File
+      shell: ${{inputs.shell}}
+      run: |
+        echo $IB_LICENSE_FILE >> $HOME/license.xml
+      env:
+        IB_LICENSE_FILE: ${{secrets.INSTALL_BUILDER_LICENSE}}
+    - name: Release script
+      shell: ${{inputs.shell}}
+      run: |
+        ci/${{inputs.os}}/release.sh
+      env:
+        FEBIO_VER: ${{inputs.febioVer}}
+        FBS_VER: ${{inputs.fbsVer}}
+    - name: Build
+      shell: ${{inputs.shell}}
+      run: |
+        ${{ inputs.script }}
+    - name: Upload Binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.package-name }}-${{inputs.os}}-${{inputs.arch}}
+        path: |
+          cmbuild/Release
+          cmbuild/bin
+          cmbuild/lib
+          !cmbuild/lib/*.a
+    - name: Upload Installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: FEBioStudio_${{inputs.fbsVer}}_FEBio_${{inputs.febioVer}}_${{inputs.os}}}
+        path: |
+          $HOME/${{inputs.installerName}}
+    

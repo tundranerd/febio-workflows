@@ -1,0 +1,215 @@
+on:
+  workflow_call:
+    inputs:
+      febioVer:
+        required: true
+        type: string
+      fbsVer:
+        required: true
+        type: string
+      shell:
+        required: false
+        default: bash
+        type: string
+      # package-name:
+      #   required: true
+      #   type: string
+      # package-sdk:
+      #   default: false
+      #   required: false
+      #   type: boolean
+      # requires-sdk:
+      #   default: false
+      #   required: false
+      #   type: boolean
+      # sdk-config:
+      #   required: false
+      #   type: string
+      aws-region:
+        default: us-east-1
+        required: false
+        type: string
+      os:
+        default: Linux
+        required: false
+        type: string
+      arch:
+        default: X64
+        required: false
+        type: string
+      runTests:
+        description: "Run tests?"
+        required: false
+        type: boolean
+        default: false
+      aws-subnet-id:
+        required: false
+        default: subnet-064f21b53fc72cf44
+        type: string
+      aws-sg-id:
+        required: false
+        default: sg-0ca7912782cf1538b
+        type: string
+      aws-ami-id:
+        required: false
+        default: ami-0b0e38d12eb5ff011
+        type: string
+      aws-instance-type:
+        required: false
+        default: c5a.8xlarge
+        type: string
+      aws-availability-zone:
+        required: false
+        default: us-east-1b
+        type: string
+      key-pair:
+        required: false
+        default: win
+        type: string
+
+jobs:
+  start-runner:
+    name: Start self-hosted EC2 runner
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws-region }}
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: tundranerd/ec2-multiple-github-runners@multi-os-multi-runner
+        with:
+          mode: start
+          key-pair: ${{ inputs.key-pair }}
+          os: ${{ inputs.os }}
+          github-token: ${{ secrets.GH_TOKEN}}
+          ec2-image-id: ${{ inputs.aws-ami-id}}
+          ec2-instance-type: ${{ inputs.aws-instance-type }}
+          subnet-id: ${{ inputs.aws-subnet-id }}
+          security-group-id: ${{ inputs.aws-sg-id }}
+          availability-zone: ${{ inputs.aws-availability-zone }}
+          wait-for-registry-timeout: 5
+          aws-resource-tags: > # optional, requires additional permissions
+            [
+              {"Key": "Name", "Value": "ec2-github-runner"},
+              {"Key": "GitHubRepository", "Value": "${{ github.repository }}"},
+              {"Key": "os", "Value": "${{ inputs.os }}"}
+            ]
+  release:
+    name: Run release script
+    needs:
+      - start-runner # required to get output from the start-runner job
+    runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
+    outputs:
+      git_describe: ${{ steps.git-describe.outputs.git_describe }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+      - id: git-describe
+        name: Git Describe
+        uses: febiosoftware/febio-workflows/.github/actions/git-describe@develop
+        with:
+          shell: ${{ inputs.shell }}
+      - name: Release
+        uses: febiosoftware/febio-workflows/.github/actions/release@develop
+        with:
+          febioVer: ${{ inputs.febioVer }}
+          fbsVer: ${{ inputs.fbsVer }}
+          shell: ${{ inputs.shell }}
+          os: ${{inputs.os}}
+  # tests:
+  #   if: inputs.runTests
+  #   name: Run test suite
+  #   needs:
+  #     - build
+  #     - start-runner # required to get output from the start-runner job
+  #   runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #       with:
+  #         submodules: 'true'
+  #     - name: Tests
+  #       uses: febiosoftware/febio-workflows/.github/actions/run-tests@develop
+  #       with:
+  #         script: ci/${{inputs.os}}/test.sh
+  #         shell: ${{ inputs.shell }}
+  #         package-name: ${{ inputs.package-name }}
+  #         os: ${{inputs.os}}
+  #         arch: ${{inputs.arch}}
+  # stop-runner:
+  #   name: Stop self-hosted EC2 runner
+  #   needs:
+  #     - start-runner # required to get output from the start-runner job
+  #     - tests # required to wait when the main job is done
+  #   runs-on: ubuntu-latest
+  #   if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
+  #   steps:
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ inputs.aws-region }}
+  #     - name: Stop EC2 runner
+  #       uses: tundranerd/ec2-multiple-github-runners@multi-os-multi-runner
+  #       with:
+  #         mode: stop
+  #         os: ${{ inputs.os }}
+  #         wait-for-deregistry-timeout: 5
+  #         github-token: ${{ secrets.GH_TOKEN}}
+  #         label: ${{ needs.start-runner.outputs.label }}
+  #         ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
+  # repo-artifacts:
+  #   name: Upload artifacts to repo
+  #   needs:
+  #     - build # required to get output from the start-runner job
+  #   runs-on: ubuntu-latest
+  #   if: ${{ success() }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #       with:
+  #         submodules: 'true'
+  #     - name: Repo Artifacts
+  #       uses: febiosoftware/febio-workflows/.github/actions/repo-artifacts@develop
+  #       with:
+  #         ssh-user: ${{ secrets.SSH_USER }}
+  #         ssh-key: ${{ secrets.SSH_KEY }}
+  #         ssh-host: ${{ secrets.SSH_HOST }}
+  #         shell: ${{ inputs.shell }}
+  #         package-name: ${{ inputs.package-name }}
+  #         os: ${{inputs.os}}
+  #         arch: ${{inputs.arch}}
+  # publish-to-s3:
+  #   name: Publish to S3
+  #   needs:
+  #     - build
+  #   runs-on: ubuntu-latest
+  #   if: ${{ success() }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #       with:
+  #         submodules: 'true'
+  #     - name: Publish To S3
+  #       uses: febiosoftware/febio-workflows/.github/actions/publish-to-s3@develop
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         shell: ${{ inputs.shell }}
+  #         package-name: ${{ inputs.package-name }}
+  #         package-sdk: ${{ inputs.package-sdk }}
+  #         os: ${{inputs.os}}
+  #         arch: ${{inputs.arch}}
+  #         git-tag: ${{ needs.build.outputs.git_describe }}
+  #         aws-region: ${{ inputs.aws-region }}
