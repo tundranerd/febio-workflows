@@ -22,9 +22,6 @@ inputs:
   releaseDir:
     required: true
     type: string
-  installerSuffix:
-    required: true
-    type: string
 
 
 runs:
@@ -37,7 +34,7 @@ runs:
       env:
         IB_LICENSE_FILE: ${{inputs.ib_license_file}}
         IB_LICENSE_CONTENTS: ${{inputs.ib_license_contents}}
-    - name: Release script
+    - name: Release Script
       shell: ${{inputs.shell}}
       run: |
         ci/${{inputs.os}}/release.sh
@@ -51,14 +48,14 @@ runs:
     - name: Upload Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.package-name }}-${{inputs.os}}-${{inputs.arch}}
+        name: ${{inputs.os}}-Release-Artifacts
         path: |
           ${{inputs.releaseDir}}/bin
           ${{inputs.releaseDir}}/febioLib
     - name: Upload Installer
       uses: actions/upload-artifact@v4
       with:
-        name: FEBioStudio_${{inputs.fbsVer}}_FEBio_${{inputs.febioVer}}_${{inputs.os}}}
+        name: FEBioStudio_${{inputs.fbsVer}}_FEBio_${{inputs.febioVer}}_${{inputs.os}}_installer
         path: |
-          ${{inputs.releaseDir}}/installer.${{inputs.installerSuffix}}
+          ${{inputs.releaseDir}}/installer/*
     
