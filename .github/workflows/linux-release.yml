@@ -124,10 +124,10 @@ jobs:
         with:
           febioVer: ${{ inputs.febioVer }}
           fbsVer: ${{ inputs.fbsVer }}
-          fbsRepo: ${{ github.workspace }}
           shell: ${{ inputs.shell }}
           os: ${{inputs.os}}
-          ib_license_file: ${{ secrets.INSTALL_BUILDER_LICENSE }}
+          ib_license_file: /home/ubuntu/license.xml
+          ib_license_contents: ${{ secrets.INSTALL_BUILDER_LICENSE }}
           installerName: /home/ubuntu/installer.run
   # tests:
   #   if: inputs.runTests

@@ -19,6 +19,9 @@ inputs:
   ib_license_file:
     required: true
     type: string
+  ib_license_contents:
+    required: true
+    type: string
   installerName:
     required: true
     type: string
@@ -30,9 +33,10 @@ runs:
     - name: Write License File
       shell: ${{inputs.shell}}
       run: |
-        echo $IB_LICENSE_FILE >> $HOME/license.xml
+        echo $IB_LICENSE_CONTENTS >> $IB_LICENSE_FILE
       env:
         IB_LICENSE_FILE: ${{inputs.ib_license_file}}
+        IB_LICENSE_CONTENTS: ${{inputs.ib_license_contents}}
     - name: Release script
       shell: ${{inputs.shell}}
       run: |
@@ -40,7 +44,6 @@ runs:
       env:
         FEBIO_VER: ${{inputs.febioVer}}
         FBS_VER: ${{inputs.fbsVer}}
-        FBSRepo: ${{inputs.fbsRepo}}
     - name: Build
       shell: ${{inputs.shell}}
       run: |
