@@ -127,7 +127,7 @@ jobs:
           shell: ${{ inputs.shell }}
           os: ${{inputs.os}}
           ib_license_file: ${{ secrets.INSTALL_BUILDER_LICENSE }}
-          installerName: installer.run
+          installerName: /home/ubuntu/installer.run
   # tests:
   #   if: inputs.runTests
   #   name: Run test suite
