@@ -1,0 +1,77 @@
+name: 'Run tests'
+description: 'Creates SDK and Uploads artifacts'
+inputs:
+  os:
+    required: true
+    type: string
+  febioVer:
+    required: true
+    type: string
+  fbsVer:
+    required: true
+    type: string
+  ssh-user:
+    required: true
+    type: string
+  ssh-key:
+    required: true
+    type: string
+  ssh-host:
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{inputs.os}}-Release-Artifacts
+        path: |
+          artifacts
+    - name: Configure SSH
+      shell: bash
+      run: |
+        ci/common/linux/configure-ssh.sh
+      env:
+        SSH_USER: ${{ inputs.ssh-user }}
+        SSH_KEY: ${{ inputs.ssh-key }}
+        SSH_HOST: ${{ inputs.ssh-host }}
+    - name: Stage Build to Repo
+      shell: bash
+      run: |
+        ci/${{inputs.os}}/scp-to-repo-release.sh
+    # - name: Get OS Argument
+    #   id: os-argument
+    #   shell: ${{inputs.shell}}
+    #   run: |
+    #     OS=${{inputs.os}}
+    #     case $OS in
+
+    #       macOS)
+    #         OS_ARG="-m"
+    #         ;;
+
+    #       Windows)
+    #         OS_ARG="-w"
+    #         ;;
+
+    #       Linux)
+    #         OS_ARG="-l"
+    #         ;;
+
+    #       *)
+    #         echo "unknown"; exit 1
+    #         ;;
+
+    #     esac
+    #     echo "os-arg=$OS_ARG" >> $GITHUB_OUTPUT
+
+    - name: Make Release
+      shell: bash
+      run: |
+        OS_ARG=${{steps.os-argument.outputs.os-arg}}
+        ssh repo "python3 modelRepo/makeRelease.py $OS $FEBIO_VER $FBS_VER"
+      env:
+        OS: ${{inputs.os}}
+        FEBIO_VER: ${{inputs.febioVer}}
+        FBS_VER: ${{inputs.fbsVer}}

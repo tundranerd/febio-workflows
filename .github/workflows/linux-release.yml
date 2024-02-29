@@ -172,27 +172,26 @@ jobs:
           github-token: ${{ secrets.GH_TOKEN}}
           label: ${{ needs.start-runner.outputs.label }}
           ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
-  # repo-artifacts:
-  #   name: Upload artifacts to repo
-  #   needs:
-  #     - build # required to get output from the start-runner job
-  #   runs-on: ubuntu-latest
-  #   if: ${{ success() }}
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         submodules: 'true'
-  #     - name: Repo Artifacts
-  #       uses: febiosoftware/febio-workflows/.github/actions/repo-artifacts@develop
-  #       with:
-  #         ssh-user: ${{ secrets.SSH_USER }}
-  #         ssh-key: ${{ secrets.SSH_KEY }}
-  #         ssh-host: ${{ secrets.SSH_HOST }}
-  #         shell: ${{ inputs.shell }}
-  #         package-name: ${{ inputs.package-name }}
-  #         os: ${{inputs.os}}
-  #         arch: ${{inputs.arch}}
+  repo-artifacts:
+    name: Upload artifacts to repo
+    needs:
+      - build # required to get output from the start-runner job
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Repo Artifacts
+        uses: febiosoftware/febio-workflows/.github/actions/repo-artifacts-release@develop
+        with:
+          ssh-user: ${{ secrets.SSH_USER }}
+          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-host: ${{ secrets.SSH_HOST }}
+          os: ${{inputs.os}}
+          febioVer: ${{ inputs.febioVer }}
+          fbsVer: ${{ inputs.fbsVer }}
   # publish-to-s3:
   #   name: Publish to S3
   #   needs:
