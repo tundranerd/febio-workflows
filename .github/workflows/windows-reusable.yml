@@ -88,7 +88,7 @@ jobs:
           subnet-id: ${{ inputs.aws-subnet-id }}
           security-group-id: ${{ inputs.aws-sg-id }}
           availability-zone: ${{ inputs.aws-availability-zone }}
-          wait-for-registry-timeout: 30
+          wait-for-registry-timeout: 10
           aws-resource-tags: > # optional, requires additional permissions
             [
               {"Key": "Name", "Value": "ec2-github-runner"},
