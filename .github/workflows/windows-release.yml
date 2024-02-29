@@ -10,6 +10,7 @@ on:
       shell:
         required: false
         default: bash
+        type: string
       aws-region:
         default: us-east-1
         required: false
