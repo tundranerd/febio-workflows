@@ -162,7 +162,7 @@ jobs:
   repo-artifacts:
     name: Upload artifacts to repo
     needs:
-      - build # required to get output from the start-runner job
+      - release # required to get output from the start-runner job
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
