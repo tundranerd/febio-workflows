@@ -38,7 +38,7 @@ on:
         type: string
       aws-ami-id:
         required: false
-        default: ami-0b0e38d12eb5ff011
+        default: ami-04bb42ae8c0b24120
         type: string
       aws-instance-type:
         required: false
@@ -80,7 +80,7 @@ jobs:
           subnet-id: ${{ inputs.aws-subnet-id }}
           security-group-id: ${{ inputs.aws-sg-id }}
           availability-zone: ${{ inputs.aws-availability-zone }}
-          wait-for-registry-timeout: 5
+          wait-for-registry-timeout: 7
           aws-resource-tags: > # optional, requires additional permissions
             [
               {"Key": "Name", "Value": "ec2-github-runner"},
