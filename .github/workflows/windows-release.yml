@@ -38,7 +38,7 @@ on:
         type: string
       aws-ami-id:
         required: false
-        default: ami-04bb42ae8c0b24120
+        default: ami-0b18c665dbe9efa75
         type: string
       aws-instance-type:
         required: false
