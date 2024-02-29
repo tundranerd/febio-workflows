@@ -110,7 +110,7 @@ jobs:
         with:
           febioVer: ${{ inputs.febioVer }}
           fbsVer: ${{ inputs.fbsVer }}
-          shell: pwsh
+          shell: powershell
           script: ci/${{inputs.os}}/release.ps1
           os: ${{inputs.os}}
           ib_license_file: C:/Users/Administrator/license.xml
