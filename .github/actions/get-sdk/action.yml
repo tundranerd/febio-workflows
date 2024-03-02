@@ -11,15 +11,6 @@ inputs:
   arch:
     required: true
     type: string
-  aws-access-key-id:
-    required: true
-    type: string
-  aws-secret-access-key:
-    required: true
-    type: string
-  aws-region:
-    required: true
-    type: string
   sdk-config:
     required: true
     type: string
@@ -39,12 +30,6 @@ runs:
         echo "package_name=${{fromJson(inputs.sdk-config).package_name}}" >> $GITHUB_OUTPUT
         echo "package=${{fromJson(inputs.sdk-config).package}}" >> $GITHUB_OUTPUT
         echo "bucket=${{fromJson(inputs.sdk-config).bucket}}" >> $GITHUB_OUTPUT
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        role-to-assume: arn:aws:iam::353328028284:role/github-actions-runner
-        role-session-name: github-actions-runner-session
-        aws-region: ${{ inputs.aws-region }}
     - name: Fetch latest febio-sdk
       shell: ${{inputs.shell}}
       run: |
