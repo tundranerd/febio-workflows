@@ -158,6 +158,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: 'true'
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -217,6 +218,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: 'true'
       - name: Repo Artifacts
         uses: tundranerd/febio-workflows/.github/actions/repo-artifacts@oidc-wip-aws
@@ -240,6 +242,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: 'true'
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -256,4 +259,3 @@ jobs:
           os: ${{inputs.os}}
           arch: ${{inputs.arch}}
           git-tag: ${{ needs.build.outputs.git_describe }}
-          aws-region: ${{ inputs.aws-region }}
