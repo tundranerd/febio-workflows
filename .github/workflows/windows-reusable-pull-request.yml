@@ -124,11 +124,11 @@ jobs:
           submodules: 'true'
       - id: git-describe
         name: Git Describe
-        uses: febiosoftware/febio-workflows/.github/actions/git-describe@develop
+        uses: tundranerd/febio-workflows/.github/actions/git-describe@oidc-wip-aws
         with:
           shell: ${{ inputs.shell }}
       - name: Build
-        uses: febiosoftware/febio-workflows/.github/actions/build@develop
+        uses: tundranerd/febio-workflows/.github/actions/build@oidc-wip-aws
         with:
           shell: ${{ inputs.shell }}
           package-name: ${{ inputs.package-name }}
@@ -157,7 +157,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           submodules: 'true'
       - name: Tests
-        uses: febiosoftware/febio-workflows/.github/actions/run-tests@develop
+        uses: tundranerd/febio-workflows/.github/actions/run-tests@oidc-wip-aws
         with:
           script: ci/${{inputs.os}}/test.sh
           shell: ${{ inputs.shell }}
