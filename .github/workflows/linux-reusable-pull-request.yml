@@ -19,10 +19,6 @@ on:
       sdk-config:
         required: false
         type: string
-      aws-region:
-        default: us-east-1
-        required: false
-        type: string
       os:
         default: Linux
         required: false
@@ -52,6 +48,18 @@ on:
         required: false
         default: c5a.8xlarge
         type: string
+      aws-region:
+        default: us-east-1
+        required: false
+        type: string
+      aws-role-to-assume:
+        required: false
+        default: arn:aws:iam::353328028284:role/github-actions-runner
+        type: string
+      aws-role-session-name:
+        required: false
+        default: febio-github-actions-runner-session
+        type: string
       aws-availability-zone:
         required: false
         default: us-east-1b
@@ -69,8 +77,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::353328028284:role/github-actions-runner
-          role-session-name: github-actions-runner-session
+          role-to-assume: ${{ inputs.aws-role-to-assume }}
+          role-session-name: ${{ inputs.aws-role-session-name }}
           aws-region: ${{ inputs.aws-region }}
       - id: aws-ssm # Fetch github-token from aws-ssm
         run: |
@@ -169,8 +177,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::353328028284:role/github-actions-runner
-          role-session-name: github-actions-runner-session
+          role-to-assume: ${{ inputs.aws-role-to-assume }}
+          role-session-name: ${{ inputs.aws-role-session-name }}
           aws-region: ${{ inputs.aws-region }}
       - id: aws-ssm # Fetch github-token from aws-ssm
         run: |
