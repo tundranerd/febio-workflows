@@ -19,10 +19,6 @@ on:
       sdk-config:
         required: false
         type: string
-      aws-region:
-        default: us-east-1
-        required: false
-        type: string
       os:
         default: Windows
         required: false
@@ -52,6 +48,18 @@ on:
         required: false
         default: c5a.8xlarge
         type: string
+      aws-region:
+        default: us-east-1
+        required: false
+        type: string
+      aws-role-to-assume:
+        required: false
+        default: arn:aws:iam::353328028284:role/github-actions-runner
+        type: string
+      aws-role-session-name:
+        required: false
+        default: febio-github-actions-runner-session
+        type: string
       aws-availability-zone:
         required: false
         default: us-east-1b
@@ -65,16 +73,19 @@ jobs:
   start-runner:
     name: Start self-hosted EC2 runner
     runs-on: ubuntu-latest
-    outputs:
-      label: ${{ steps.start-ec2-runner.outputs.label }}
-      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ inputs.aws-role-to-assume }}
+          role-session-name: ${{ inputs.aws-role-session-name }}
           aws-region: ${{ inputs.aws-region }}
+      - id: aws-ssm # Fetch github-token from aws-ssm
+        run: |
+          GH_TOKEN=$(aws ssm get-parameter --name /github/runners/github-token --with-decryption | jq --raw-output .Parameter.Value)
+          echo "::add-mask::$GH_TOKEN"
+          echo "token=$GH_TOKEN"  >> "$GITHUB_OUTPUT"
+
       - name: Start EC2 runner
         id: start-ec2-runner
         uses: tundranerd/ec2-multiple-github-runners@multi-os-multi-runner
@@ -82,30 +93,33 @@ jobs:
           mode: start
           key-pair: ${{ inputs.key-pair }}
           os: ${{ inputs.os }}
-          github-token: ${{ secrets.GH_TOKEN}}
+          github-token: ${{ steps.aws-ssm.outputs.token}}
           ec2-image-id: ${{ inputs.aws-ami-id}}
           ec2-instance-type: ${{ inputs.aws-instance-type }}
           subnet-id: ${{ inputs.aws-subnet-id }}
           security-group-id: ${{ inputs.aws-sg-id }}
           availability-zone: ${{ inputs.aws-availability-zone }}
-          wait-for-registry-timeout: 7
+          wait-for-registry-timeout: 5
           aws-resource-tags: > # optional, requires additional permissions
             [
               {"Key": "Name", "Value": "ec2-github-runner"},
               {"Key": "GitHubRepository", "Value": "${{ github.repository }}"},
               {"Key": "os", "Value": "${{ inputs.os }}"}
             ]
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+
   build:
     name: Clone and build
     needs:
       - start-runner # required to get output from the start-runner job
     runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
-    outputs:
-      git_describe: ${{ steps.git-describe.outputs.git_describe }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           submodules: 'true'
       - id: git-describe
@@ -116,17 +130,18 @@ jobs:
       - name: Build
         uses: febiosoftware/febio-workflows/.github/actions/build@develop
         with:
-          shell: cmd
+          shell: ${{ inputs.shell }}
           package-name: ${{ inputs.package-name }}
           requires-sdk: ${{ inputs.requires-sdk }}
           sdk-config: ${{ inputs.sdk-config }}
           package-sdk: ${{ inputs.package-sdk }}
-          script: ci/${{inputs.os}}/build.bat
+          script: ci/${{inputs.os}}/build.sh
           os: ${{inputs.os}}
           arch: ${{inputs.arch}}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
+    outputs:
+      git_describe: ${{ steps.git-describe.outputs.git_describe }}
+
   tests:
     if: inputs.runTests
     name: Run test suite
@@ -138,15 +153,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
           submodules: 'true'
       - name: Tests
         uses: febiosoftware/febio-workflows/.github/actions/run-tests@develop
         with:
-          script: ci/${{inputs.os}}/test.bat
-          shell: cmd
+          script: ci/${{inputs.os}}/test.sh
+          shell: ${{ inputs.shell }}
           package-name: ${{ inputs.package-name }}
           os: ${{inputs.os}}
           arch: ${{inputs.arch}}
+
+
   stop-runner:
     name: Stop self-hosted EC2 runner
     needs:
@@ -158,63 +177,20 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ inputs.aws-role-to-assume }}
+          role-session-name: ${{ inputs.aws-role-session-name }}
           aws-region: ${{ inputs.aws-region }}
+      - id: aws-ssm # Fetch github-token from aws-ssm
+        run: |
+          GH_TOKEN=$(aws ssm get-parameter --name /github/runners/github-token --with-decryption | jq --raw-output .Parameter.Value)
+          echo "::add-mask::$GH_TOKEN"
+          echo "token=$GH_TOKEN"  >> "$GITHUB_OUTPUT"
       - name: Stop EC2 runner
         uses: tundranerd/ec2-multiple-github-runners@multi-os-multi-runner
         with:
           mode: stop
           os: ${{ inputs.os }}
           wait-for-deregistry-timeout: 5
-          github-token: ${{ secrets.GH_TOKEN}}
+          github-token: ${{ steps.aws-ssm.outputs.token}}
           label: ${{ needs.start-runner.outputs.label }}
           ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
-  repo-artifacts:
-    name: Upload artifacts to repo
-    needs:
-      - build # required to get output from the start-runner job
-    runs-on: ubuntu-latest
-    if: >
-      success() &&
-      ! github.event.pull_request.head.repo.fork
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: 'true'
-      - name: Repo Artifacts
-        uses: febiosoftware/febio-workflows/.github/actions/repo-artifacts@develop
-        with:
-          ssh-user: ${{ secrets.SSH_USER }}
-          ssh-key: ${{ secrets.SSH_KEY }}
-          ssh-host: ${{ secrets.SSH_HOST }}
-          shell: ${{ inputs.shell }}
-          package-name: ${{ inputs.package-name }}
-          os: ${{inputs.os}}
-          arch: ${{inputs.arch}}
-  publish-to-s3:
-    name: Publish to S3
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    if: >
-      success() &&
-      ! github.event.pull_request.head.repo.fork
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: 'true'
-      - name: Publish To S3
-        uses: febiosoftware/febio-workflows/.github/actions/publish-to-s3@develop
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          shell: ${{ inputs.shell }}
-          package-name: ${{ inputs.package-name }}
-          package-sdk: ${{ inputs.package-sdk }}
-          os: ${{inputs.os}}
-          arch: ${{inputs.arch}}
-          git-tag: ${{ needs.build.outputs.git_describe }}
-          aws-region: ${{ inputs.aws-region }}
