@@ -130,12 +130,12 @@ jobs:
       - name: Build
         uses: tundranerd/febio-workflows/.github/actions/build@oidc-wip-aws
         with:
-          shell: ${{ inputs.shell }}
+          shell: cmd
           package-name: ${{ inputs.package-name }}
           requires-sdk: ${{ inputs.requires-sdk }}
           sdk-config: ${{ inputs.sdk-config }}
           package-sdk: ${{ inputs.package-sdk }}
-          script: ci/${{inputs.os}}/build.sh
+          script: ci/${{inputs.os}}/build.bat
           os: ${{inputs.os}}
           arch: ${{inputs.arch}}
           aws-region: ${{ inputs.aws-region }}
@@ -159,8 +159,8 @@ jobs:
       - name: Tests
         uses: tundranerd/febio-workflows/.github/actions/run-tests@oidc-wip-aws
         with:
-          script: ci/${{inputs.os}}/test.sh
-          shell: ${{ inputs.shell }}
+          script: ci/${{inputs.os}}/test.bat
+          shell: cmd
           package-name: ${{ inputs.package-name }}
           os: ${{inputs.os}}
           arch: ${{inputs.arch}}

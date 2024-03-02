@@ -1,0 +1,155 @@
+on:
+  workflow_call:
+    inputs:
+      shell:
+        required: false
+        default: bash
+        type: string
+      package-name:
+        required: true
+        type: string
+      package-sdk:
+        default: false
+        required: false
+        type: boolean
+      requires-sdk:
+        default: false
+        required: false
+        type: boolean
+      sdk-config:
+        required: false
+        type: string
+      os:
+        default: macOS
+        required: false
+        type: string
+      arch:
+        default: X64
+        required: false
+        type: string
+      runTests:
+        description: "Run tests?"
+        required: false
+        type: boolean
+        default: false
+      aws-region:
+        default: us-east-1
+        required: false
+        type: string
+      aws-role-to-assume:
+        required: false
+        default: arn:aws:iam::353328028284:role/github-actions-runner
+        type: string
+      aws-role-session-name:
+        required: false
+        default: febio-github-actions-runner-session
+        type: string
+      aws-availability-zone:
+        required: false
+        default: us-east-1b
+        type: string
+
+jobs:
+  build:
+    name: Clone and build
+    runs-on: self-hosted
+    outputs:
+      git_describe: ${{ steps.git-describe.outputs.git_describe }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+      - id: git-describe
+        name: Git Describe
+        uses: tundranerd/febio-workflows/.github/actions/git-describe@oidc-wip-aws
+        with:
+          shell: ${{ inputs.shell }}
+      - name: Build
+        uses: tundranerd/febio-workflows/.github/actions/build@oidc-wip-aws
+        with:
+          shell: ${{ inputs.shell }}
+          package-name: ${{ inputs.package-name }}
+          requires-sdk: ${{ inputs.requires-sdk }}
+          sdk-config: ${{ inputs.sdk-config }}
+          package-sdk: ${{ inputs.package-sdk }}
+          script: ci/${{inputs.os}}/build.sh
+          os: ${{inputs.os}}
+          arch: ${{inputs.arch}}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws-region }}
+  tests:
+    if: inputs.runTests
+    name: Run test suite
+    needs:
+      - build
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+      - name: Tests
+        uses: tundranerd/febio-workflows/.github/actions/run-tests@oidc-wip-aws
+        with:
+          script: ci/${{inputs.os}}/test.sh
+          shell: ${{ inputs.shell }}
+          package-name: ${{ inputs.package-name }}
+          os: ${{inputs.os}}
+          arch: ${{inputs.arch}}
+  repo-artifacts:
+    name: Upload artifacts to repo
+    needs:
+      - build # required to get output from the start-runner job
+    runs-on: ubuntu-latest
+    if: >
+      success() &&
+      ! github.event.pull_request.head.repo.fork
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+      - name: Repo Artifacts
+        uses: tundranerd/febio-workflows/.github/actions/repo-artifacts@oidc-wip-aws
+        with:
+          ssh-user: ${{ secrets.SSH_USER }}
+          ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-host: ${{ secrets.SSH_HOST }}
+          shell: ${{ inputs.shell }}
+          package-name: ${{ inputs.package-name }}
+          os: ${{inputs.os}}
+          arch: ${{inputs.arch}}
+  publish-to-s3:
+    name: Publish to S3
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    if: >
+      success() &&
+      ! github.event.pull_request.head.repo.fork
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ inputs.aws-role-to-assume }}
+          role-session-name: ${{ inputs.aws-role-session-name }}
+          aws-region: ${{ inputs.aws-region }}
+      - name: Publish To S3
+        uses: tundranerd/febio-workflows/.github/actions/publish-to-s3@oidc-wip-aws
+        with:
+          shell: ${{ inputs.shell }}
+          package-name: ${{ inputs.package-name }}
+          package-sdk: ${{ inputs.package-sdk }}
+          os: ${{inputs.os}}
+          arch: ${{inputs.arch}}
+          git-tag: ${{ needs.build.outputs.git_describe }}

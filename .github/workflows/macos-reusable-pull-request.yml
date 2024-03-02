@@ -19,10 +19,6 @@ on:
       sdk-config:
         required: false
         type: string
-      aws-region:
-        default: us-east-1
-        required: false
-        type: string
       os:
         default: macOS
         required: false
@@ -36,6 +32,22 @@ on:
         required: false
         type: boolean
         default: false
+      aws-region:
+        default: us-east-1
+        required: false
+        type: string
+      aws-role-to-assume:
+        required: false
+        default: arn:aws:iam::353328028284:role/github-actions-runner
+        type: string
+      aws-role-session-name:
+        required: false
+        default: febio-github-actions-runner-session
+        type: string
+      aws-availability-zone:
+        required: false
+        default: us-east-1b
+        type: string
 
 jobs:
   build:
@@ -47,6 +59,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           submodules: 'true'
       - id: git-describe
@@ -78,6 +91,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
           submodules: 'true'
       - name: Tests
         uses: febiosoftware/febio-workflows/.github/actions/run-tests@develop
@@ -87,51 +102,3 @@ jobs:
           package-name: ${{ inputs.package-name }}
           os: ${{inputs.os}}
           arch: ${{inputs.arch}}
-  repo-artifacts:
-    name: Upload artifacts to repo
-    needs:
-      - build # required to get output from the start-runner job
-    runs-on: ubuntu-latest
-    if: >
-      success() &&
-      ! github.event.pull_request.head.repo.fork
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: 'true'
-      - name: Repo Artifacts
-        uses: febiosoftware/febio-workflows/.github/actions/repo-artifacts@develop
-        with:
-          ssh-user: ${{ secrets.SSH_USER }}
-          ssh-key: ${{ secrets.SSH_KEY }}
-          ssh-host: ${{ secrets.SSH_HOST }}
-          shell: ${{ inputs.shell }}
-          package-name: ${{ inputs.package-name }}
-          os: ${{inputs.os}}
-          arch: ${{inputs.arch}}
-  publish-to-s3:
-    name: Publish to S3
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    if: >
-      success() &&
-      ! github.event.pull_request.head.repo.fork
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: 'true'
-      - name: Publish To S3
-        uses: febiosoftware/febio-workflows/.github/actions/publish-to-s3@develop
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          shell: ${{ inputs.shell }}
-          package-name: ${{ inputs.package-name }}
-          package-sdk: ${{ inputs.package-sdk }}
-          os: ${{inputs.os}}
-          arch: ${{inputs.arch}}
-          git-tag: ${{ needs.build.outputs.git_describe }}
-          aws-region: ${{ inputs.aws-region }}
