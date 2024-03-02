@@ -32,6 +32,9 @@ inputs:
 
 runs:
   using: "composite"
+  permissions:
+    id-token: write # This is required for requesting the JWT
+    contents: read  # This is required for actions/checkout
   steps:
     - name: Download SDK
       if: ${{ inputs.package-sdk == 'true' }}
@@ -49,8 +52,8 @@ runs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ inputs.aws-access-key-id }}
-        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        role-to-assume: arn:aws:iam::353328028284:role/github-actions-runner
+        role-session-name: github-actions-runner-session
         aws-region: ${{ inputs.aws-region }}
     - name: Publish to S3
       shell: ${{inputs.shell}}
