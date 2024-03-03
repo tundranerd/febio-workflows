@@ -78,14 +78,11 @@ jobs:
           script: ci/${{inputs.os}}/build.sh
           os: ${{inputs.os}}
           arch: ${{inputs.arch}}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ inputs.aws-region }}
   tests:
     if: inputs.runTests
     name: Run test suite
-    needs:
-      - build
+      #needs:
+      #  - build
     runs-on: self-hosted
     steps:
       - name: Checkout
@@ -94,6 +91,12 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
           submodules: 'true'
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ inputs.aws-role-to-assume }}
+          role-session-name: ${{ inputs.aws-role-session-name }}
+          aws-region: ${{ inputs.aws-region }}
       - name: Tests
         uses: tundranerd/febio-workflows/.github/actions/run-tests@oidc-wip-aws
         with:

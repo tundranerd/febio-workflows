@@ -25,6 +25,39 @@ runs:
         name: ${{inputs.package-name}}-${{inputs.os}}-${{inputs.arch}}
         path: |
           cmbuild
+    - name: Get FEBioChem
+      uses: tundranerd/febio-workflows/.github/actions/get-sdk@oidc-wip-aws
+      with:
+        os: ${{inputs.os}}
+        arch: ${{inputs.arch}}
+        sdk-config: |
+          {
+            "package_name": "febiochem",
+            "package": "febiochem",
+            "sdk_path": "ci/develop",
+            "version": "v1.0",
+          }
+    - name: Get FEBioHeat
+      uses: tundranerd/febio-workflows/.github/actions/get-sdk@oidc-wip-aws
+      with:
+        os: ${{inputs.os}}
+        arch: ${{inputs.arch}}
+        sdk-config: |
+          {
+            "package_name": "febioheat",
+            "package": "febioheat",
+            "sdk_path": "ci/develop",
+            "version": "v1.0",
+          }
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: 'overhaul'
+        path: ./TestSuite
+        repository: febiosoftware/TestSuite
+        fetch-depth: 0
+        submodules: 'true'
+
     - name: Run test suite
       shell: ${{inputs.shell}}
       run: |
