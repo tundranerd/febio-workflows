@@ -95,7 +95,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           submodules: 'true'
       - name: Tests
-        uses: febiosoftware/febio-workflows/.github/actions/run-tests@develop
+        uses: tundranerd/febio-workflows/.github/actions/run-tests@oidc-wip-aws
         with:
           script: ci/${{inputs.os}}/test.sh
           shell: ${{ inputs.shell }}
