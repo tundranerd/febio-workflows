@@ -35,5 +35,5 @@ runs:
       with:
         name: testsuite-${{inputs.os}}-${{inputs.arch}}-logs
         path: |
-          TestSuite/Verify4/*.log
+          TestSuite/Verify/*.log
           TestSuite/Logs*.txt
